@@ -28,7 +28,9 @@
         <div id="tab3">Tab3 content</div>
         <script src="./src/tabit.js"></script>
         <script>
-            const tab = new Tabit("#tabs");
+            const tab = new Tabit("#tabs", {
+                remember: true,
+            });
             tab._init();
         </script>
     </body>
