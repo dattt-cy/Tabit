@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            .tabit--active {
+                background-color: red;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="tabs">
+            <li>
+                <a href="#tab1">Tab1</a>
+            </li>
+            <li>
+                <a href="#tab2">Tab2</a>
+            </li>
+            <li>
+                <a href="#tab3">Tab3</a>
+            </li>
+        </ul>
+        <div id="tab1">Tab1 content</div>
+        <div id="tab2">Tab2 content</div>
+        <div id="tab3">Tab3 content</div>
+        <script src="./src/tabit.js"></script>
+        <script>
+            const tab = new Tabit("#tabs");
+            tab._init();
+        </script>
+    </body>
+</html>
