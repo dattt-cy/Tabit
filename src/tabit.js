@@ -10,7 +10,48 @@ function Tabit(selector, options) {
         return;
     }
 
-    this.panels = this.tabs
+    this.panels = this.getPanels();
+
+    if (this.tabs.length !== this.panels.length) {
+        return;
+    }
+    this.opts = Object.assign(
+        {
+            activeClassName: "tabit--active",
+            remember: false,
+        },
+        options
+    );
+
+    this._cleanRegex = /[^a-zA-Z0-9]/g;
+    this.paramKey = selector.replace(this._cleanRegex, "");
+    this.originHTML = this.container.innerHTML;
+}
+
+Tabit.prototype._init = function () {
+    let tab;
+    const param = new URLSearchParams(location.search);
+    const tabHref = param.get(this.paramKey);
+    tab =
+        (this.opts.remember &&
+            tabHref &&
+            this.tabs.find(
+                (t) =>
+                    t.getAttribute("href").replace(this._cleanRegex, "") ===
+                    tabHref
+            )) ||
+        this.tabs[0];
+    this.currentTab = tab;
+    this._activateTab(tab, false);
+    this.tabs.forEach((tab) => {
+        tab.onclick = (event) => {
+            event.preventDefault();
+            this._tryActivateTab(tab);
+        };
+    });
+};
+Tabit.prototype.getPanels = function () {
+    return this.tabs
         .map((tab) => {
             const panel = document.querySelector(tab.getAttribute("href"));
             if (!panel) {
@@ -21,46 +62,21 @@ function Tabit(selector, options) {
             return panel;
         })
         .filter(Boolean);
+};
 
-    if (this.tabs.length !== this.panels.length) {
-        return;
+Tabit.prototype._tryActivateTab = function (tab) {
+    if (tab !== this.currentTab) {
+        this._activateTab(tab);
+        this.currentTab = tab;
     }
-    this.opts = Object.assign(
-        {
-            remember: false,
-        },
-        options
-    );
-    this.originHTML = this.container.innerHTML;
-}
-
-Tabit.prototype._init = function () {
-    let tab;
-    const hash = location.hash;
-    tab =
-        (this.opts.remember &&
-            hash &&
-            this.tabs.find((t) => t.getAttribute("href") === hash)) ||
-        this.tabs[0];
-
-    this._activateTab(tab);
-
-    this.tabs.forEach((tab) => {
-        tab.onclick = (event) => this._handleTabClick(event, tab);
-    });
 };
 
-Tabit.prototype._handleTabClick = function (event, tab) {
-    event.preventDefault();
-    this._activateTab(tab);
-};
-
-Tabit.prototype._activateTab = function (tab) {
+Tabit.prototype._activateTab = function (tab, triggerOnChange = true) {
     this.tabs.forEach((tab) => {
-        tab.closest("li").classList.remove("tabit--active");
+        tab.closest("li").classList.remove(this.opts.activeClassName);
     });
 
-    tab.closest("li").classList.add("tabit--active");
+    tab.closest("li").classList.add(this.opts.activeClassName);
 
     this.panels.forEach((panel) => {
         panel.hidden = true;
@@ -70,7 +86,18 @@ Tabit.prototype._activateTab = function (tab) {
     panelActive.hidden = false;
 
     if (this.opts.remember) {
-        history.replaceState(null, null, tab.getAttribute("href"));
+        const searchParams = new URLSearchParams(location.search);
+        searchParams.set(
+            this.paramKey,
+            tab.getAttribute("href").replace(this._cleanRegex, "")
+        );
+        history.replaceState(null, null, `?${searchParams.toString()}`);
+    }
+    if (triggerOnChange && typeof this.opts.onChange === "function") {
+        this.opts.onChange({
+            tab: tab,
+            panel: panelActive,
+        });
     }
 };
 
@@ -91,7 +118,7 @@ Tabit.prototype.switch = function (input) {
             return;
         }
     }
-    this._activateTab(tabToActivate);
+    this._tryActivateTab(tabToActivate);
 };
 
 Tabit.prototype.destroy = function () {
@@ -103,4 +130,5 @@ Tabit.prototype.destroy = function () {
     this.panels = [];
     this.container = null;
     this.originHTML = null;
+    this.currentTab = null;
 };
