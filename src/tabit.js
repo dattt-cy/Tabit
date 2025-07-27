@@ -26,6 +26,7 @@ function Tabit(selector, options) {
     this._cleanRegex = /[^a-zA-Z0-9]/g;
     this.paramKey = selector.replace(this._cleanRegex, "");
     this.originHTML = this.container.innerHTML;
+    this._init();
 }
 
 Tabit.prototype._init = function () {
@@ -42,7 +43,7 @@ Tabit.prototype._init = function () {
             )) ||
         this.tabs[0];
     this.currentTab = tab;
-    this._activateTab(tab, false);
+    this._activateTab(tab, false, false);
     this.tabs.forEach((tab) => {
         tab.onclick = (event) => {
             event.preventDefault();
@@ -66,12 +67,17 @@ Tabit.prototype.getPanels = function () {
 
 Tabit.prototype._tryActivateTab = function (tab) {
     if (tab !== this.currentTab) {
+         this.currentTab = tab;
         this._activateTab(tab);
-        this.currentTab = tab;
+       
     }
 };
 
-Tabit.prototype._activateTab = function (tab, triggerOnChange = true) {
+Tabit.prototype._activateTab = function (
+    tab,
+    triggerOnChange = true,
+    updateURL = this.opts.remember
+) {
     this.tabs.forEach((tab) => {
         tab.closest("li").classList.remove(this.opts.activeClassName);
     });
@@ -85,7 +91,7 @@ Tabit.prototype._activateTab = function (tab, triggerOnChange = true) {
     const panelActive = document.querySelector(tab.getAttribute("href"));
     panelActive.hidden = false;
 
-    if (this.opts.remember) {
+    if (updateURL) {
         const searchParams = new URLSearchParams(location.search);
         searchParams.set(
             this.paramKey,
